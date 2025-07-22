@@ -1,0 +1,22 @@
+{
+  "name": "devtinder-backend",
+  "version": "1.0.0",
+  "description": "tinder for developers",
+  "main": "index.js",
+  "scripts": {
+    "start" : "node src/app.js",
+    "dev" : "nodemon src/app.js"
+  },
+  "keywords": [
+    "nodejs",
+    "expressjs",
+    "react",
+    "javascript",
+    "jwt"
+  ],
+  "author": "Prachurya Ray",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
