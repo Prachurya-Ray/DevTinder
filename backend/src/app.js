@@ -4,32 +4,18 @@ const app = express();
 
 
 //handling GET request
-app.get("/user",(req,res)=>{
+app.get(/.*fly$/,(req,res)=>{
   res.send({firstName:"Prachurya", lastName:"Ray"});
 });
 
-app.post("/user", (req, res) => {
-  res.send("Saved");
-});
-
-app.patch("/user", (req, res) => {
-  res.send("Saved");
-});
-
-app.delete("/user", (req, res) => {
-  res.send("Deleted");
+//handling GET request
+app.get("/user/:userID/:name/:pw",(req,res)=>{
+  console.log(req.params)
+  console.log(req.query)
+  res.send({firstName:"Prachurya", lastName:"Ray"});
 });
 
 
-app.use("/test", (req, res) => {
-  res.send("Hello to our test");
-});
-app.use("/check", (req, res) => {
-  res.send("Hello for checking");
-});
-app.use("/", (req, res) => {
-  res.send("Hello from our server!");
-});
 
 app.listen(3000, () => {
   console.log("Successfully connected to 3000");
