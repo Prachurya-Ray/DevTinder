@@ -19,7 +19,14 @@ app.get('/user/login',(req,res)=>{
 })
 
 app.get('/user/data',userAuth,(req,res)=>{
+  throw new Error("Go")
   res.send('User.')
+})
+
+app.use('/',(err,req,res,next)=>{
+  if(err){
+    res.status(500).send("Sorry for interuption")
+  }
 })
 
 app.listen(3000, () => {
