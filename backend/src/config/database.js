@@ -1,8 +1,9 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+const connectionString = require('./connectionString');
 
 const connectDB = async ()=>{
     await mongoose.connect(
-      "mongodb+srv://prachuryaray:8ZfinlWmEWHakZDo@namastenode.xntkxn9.mongodb.net/devTinder"
+      connectionString
     );
 }
 
