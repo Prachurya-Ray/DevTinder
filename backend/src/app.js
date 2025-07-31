@@ -20,8 +20,9 @@ app.post("/user", async (req, res) => {
 app.get("/user", async (req, res) => {
   const userMail = req.body.email;
   const userData = await User.find({ email: userMail });
+  console.log(userData[0]._id);
   try {
-    if (userData.length==0) {
+    if (userData.length == 0) {
       res.status(400).send("Data not found");
     } else {
       res.send(userData);
@@ -30,6 +31,37 @@ app.get("/user", async (req, res) => {
     res.status(400).send("something went wrong");
   }
 });
+
+app.delete("/user", async (req, res) => {
+  const userMail = req.body.email;
+  try {
+    const userData = await User.find({ email: userMail });
+
+    if (!userData || userData.length === 0) {
+      return res.status(400).send("User not found");
+    }
+
+    const userId = userData[0]._id;
+    await User.findByIdAndDelete(userId);
+
+    res.send("Deleted");
+  } catch (err) {
+    res.status(500).send("Can't Delete");
+  }
+});
+
+// app.delete("/user", async (req, res) => {
+//   const userMail = req.body.email;
+//   const userData = await User.find({ email: userMail });
+//   console.log(userData);
+//   const userId = userData[0]._id;
+//   try {
+//       await User.findByIdAndDelete({ _id: userId });
+//       res.send("Deleted");
+//   } catch (err) {
+//     res.status(404).send("Can't Delete");
+//   }
+// });
 
 app.get("/feed", async (req, res) => {
   const userData = await User.find({});
