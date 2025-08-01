@@ -20,7 +20,7 @@ app.post("/user", async (req, res) => {
 app.get("/user", async (req, res) => {
   const userMail = req.body.email;
   const userData = await User.find({ email: userMail });
-  console.log(userData[0]._id);
+
   try {
     if (userData.length == 0) {
       res.status(400).send("Data not found");
@@ -50,19 +50,26 @@ app.delete("/user", async (req, res) => {
   }
 });
 
-// app.delete("/user", async (req, res) => {
-//   const userMail = req.body.email;
-//   const userData = await User.find({ email: userMail });
-//   console.log(userData);
-//   const userId = userData[0]._id;
-//   try {
-//       await User.findByIdAndDelete({ _id: userId });
-//       res.send("Deleted");
-//   } catch (err) {
-//     res.status(404).send("Can't Delete");
-//   }
-// });
+app.patch("/user", async (req, res) => {
+  const userMail = req.body.email;
+  const userData = req.body;
+  try {
+    const temp = await User.findOne({ email: userMail });
+    if (!temp) {
+      res.status(400).send("User not found");
+    }
+    const result = await User.findOneAndUpdate(
+      { email: userMail },
+      {$set: userData }
+    );
+    console.log(result);
+    res.send("Updated Successfully.");
+  } catch (err) {
+    res.status(400).send("Error: " + err);
+  }
+});
 
+//feed
 app.get("/feed", async (req, res) => {
   const userData = await User.find({});
   try {
