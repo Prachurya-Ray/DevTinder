@@ -60,7 +60,8 @@ app.patch("/user", async (req, res) => {
     }
     const result = await User.findOneAndUpdate(
       { email: userMail },
-      {$set: userData }
+      { $set: userData },
+      { runValidators : true }
     );
     console.log(result);
     res.send("Updated Successfully.");
