@@ -50,16 +50,29 @@ app.delete("/user", async (req, res) => {
   }
 });
 
-app.patch("/user", async (req, res) => {
-  const userMail = req.body.email;
+app.patch("/user/:id", async (req, res) => {
+  const userMail = req.params.id;
   const userData = req.body;
   try {
-    const temp = await User.findOne({ email: userMail });
+    const temp = await User.findOne({ _id: userMail });
     if (!temp) {
       res.status(400).send("User not found");
     }
+    const UPDATE_ALLOWED = [
+      "gender",
+      "age",
+      "photoURL",
+      "about",
+      "skills",
+      "firstName",
+      "lastName"
+    ];
+    const isUpdateAllowed = Object.keys(userData).every((k)=>UPDATE_ALLOWED.includes(k));
+    if(!isUpdateAllowed){
+      res.status(400).send("Field not allowed for modification")
+    }
     const result = await User.findOneAndUpdate(
-      { email: userMail },
+      { _id: userMail },
       { $set: userData },
       { runValidators : true }
     );
