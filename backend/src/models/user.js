@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const validator = require("validator");
+const { default: isURL } = require("validator/lib/isURL");
 const userSchema = new mongoose.Schema(
   {
     firstName: {
@@ -22,6 +24,12 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Password is required"],
+      validate(value) {
+        if (!validator.isStrongPassword(value))
+          throw new Error(
+            "Password not strong - minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 1"
+          );
+      },
     },
     gender: {
       type: String,
@@ -39,6 +47,9 @@ const userSchema = new mongoose.Schema(
       type: String,
       default:
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR81iX4Mo49Z3oCPSx-GtgiMAkdDop2uVmVvw&s",
+      validate(value) {
+        if (!validator.isURL(value)) throw new Error("URL not valid");
+      },
     },
     about: {
       type: String,
@@ -46,10 +57,9 @@ const userSchema = new mongoose.Schema(
     },
     skills: {
       type: [String],
-      validate(value){
-        if(value.length>3)
-          throw new Error("Skills not more than 3");
-      }
+      validate(value) {
+        if (value.length > 3) throw new Error("Skills not more than 3");
+      },
     },
   },
   {
