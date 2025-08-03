@@ -7,19 +7,18 @@ const app = express();
 
 app.use(express.json());
 
+//user APIs
 app.post("/user", async (req, res) => {
-
-  const {firstName, lastName, email, password} = req.body;
+  const { firstName, lastName, email, password } = req.body;
 
   const hashPassword = await bcrypt.hash(password, 10);
-  console.log(hashPassword);
 
   // dynamic signup api to receive data from end user
   const user = new User({
     firstName,
     lastName,
     email,
-    password:hashPassword,
+    password: hashPassword,
   });
   try {
     await user.save();
@@ -97,7 +96,25 @@ app.patch("/user/:id", async (req, res) => {
   }
 });
 
-//feed
+//sign-in APIs
+app.post("/signin", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const hashPw = await User.findOne({ email: email }, "password");
+    if (!hashPw) {
+      throw new Error("Invalid Credentials");
+    }
+    const checkPw = await bcrypt.compare(password, hashPw.password);
+    if (!checkPw) {
+      throw new Error("Invalid Credentials");
+    }
+    res.send("Login Successful");
+  } catch (err) {
+    res.status(400).send("Login Unssuccessful. " + err);
+  }
+});
+
+//feed APIs
 app.get("/feed", async (req, res) => {
   const userData = await User.find({});
   try {
