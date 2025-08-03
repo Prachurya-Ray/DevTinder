@@ -1,19 +1,31 @@
 const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/user");
+const bcrypt = require("bcrypt");
 
 const app = express();
 
 app.use(express.json());
 
 app.post("/user", async (req, res) => {
+
+  const {firstName, lastName, email, password} = req.body;
+
+  const hashPassword = await bcrypt.hash(password, 10);
+  console.log(hashPassword);
+
   // dynamic signup api to receive data from end user
-  const user = new User(req.body);
+  const user = new User({
+    firstName,
+    lastName,
+    email,
+    password:hashPassword,
+  });
   try {
     await user.save();
     res.send("Saved");
   } catch (err) {
-    res.status(400).send("Can't save" + err);
+    res.status(400).send("Can't save. Error: " + err);
   }
 });
 
@@ -51,11 +63,11 @@ app.delete("/user", async (req, res) => {
 });
 
 app.patch("/user/:id", async (req, res) => {
-  const userMail = req.params.id;
+  const userID = req.params.id;
   const userData = req.body;
   try {
-    const temp = await User.findOne({ _id: userMail });
-    if (!temp) {
+    const userCheck = await User.findOne({ _id: userID });
+    if (!userCheck) {
       res.status(400).send("User not found");
     }
     const UPDATE_ALLOWED = [
@@ -65,16 +77,18 @@ app.patch("/user/:id", async (req, res) => {
       "about",
       "skills",
       "firstName",
-      "lastName"
+      "lastName",
     ];
-    const isUpdateAllowed = Object.keys(userData).every((k)=>UPDATE_ALLOWED.includes(k));
-    if(!isUpdateAllowed){
-      res.status(400).send("Field not allowed for modification")
+    const isUpdateAllowed = Object.keys(userData).every((k) =>
+      UPDATE_ALLOWED.includes(k)
+    );
+    if (!isUpdateAllowed) {
+      res.status(400).send("Field not allowed for modification");
     }
     const result = await User.findOneAndUpdate(
-      { _id: userMail },
+      { _id: userID },
       { $set: userData },
-      { runValidators : true }
+      { runValidators: true }
     );
     console.log(result);
     res.send("Updated Successfully.");
