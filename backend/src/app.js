@@ -28,21 +28,6 @@ app.post("/user", async (req, res) => {
   }
 });
 
-app.get("/user", async (req, res) => {
-  const userMail = req.body.email;
-  const userData = await User.find({ email: userMail });
-
-  try {
-    if (userData.length == 0) {
-      res.status(400).send("Data not found");
-    } else {
-      res.send(userData);
-    }
-  } catch (err) {
-    res.status(400).send("something went wrong");
-  }
-});
-
 app.delete("/user", async (req, res) => {
   const userMail = req.body.email;
   try {
@@ -58,6 +43,21 @@ app.delete("/user", async (req, res) => {
     res.send("Deleted");
   } catch (err) {
     res.status(500).send("Can't Delete");
+  }
+});
+
+app.get("/user/:id", async (req, res) => {
+  const userId = req.params.id;
+  // console.log(userId);
+  try {
+    const userData = await User.findOne({ _id: userId });
+    if (!userData) {
+      res.status(400).send("User not found");
+    } else {
+      res.send(userData);
+    }
+  } catch (err) {
+    res.status(400).send("something went wrong");
   }
 });
 
@@ -89,7 +89,7 @@ app.patch("/user/:id", async (req, res) => {
       { $set: userData },
       { runValidators: true }
     );
-    console.log(result);
+    // console.log(result);
     res.send("Updated Successfully.");
   } catch (err) {
     res.status(400).send("Error: " + err);
