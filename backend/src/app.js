@@ -2,10 +2,14 @@ const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/user");
 const bcrypt = require("bcrypt");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 const app = express();
-
+app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 //user APIs
 app.post("/user", async (req, res) => {
@@ -101,16 +105,46 @@ app.post("/signin", async (req, res) => {
   const { email, password } = req.body;
   try {
     const hashPw = await User.findOne({ email: email }, "password");
+
     if (!hashPw) {
       throw new Error("Invalid Credentials");
     }
     const checkPw = await bcrypt.compare(password, hashPw.password);
-    if (!checkPw) {
+    if (checkPw) {
+      //Create a JWT Token
+      const token = await jwt.sign({ _id: hashPw._id }, "mypracticedev");
+
+      //Add the token back to cookie and send the response back to the server
+      res.cookie("token", token);
+
+      res.send("Login Successful");
+    } else {
       throw new Error("Invalid Credentials");
     }
-    res.send("Login Successful");
   } catch (err) {
     res.status(400).send("Login Unssuccessful. " + err);
+  }
+});
+
+app.get("/profile", async (req, res) => {
+  try {
+    const cookies = req.cookies;
+    const { token } = cookies;
+    if (!token) {
+      throw new Error("Invalid Token");
+    }
+    const decodedJWT = jwt.verify(token, "mypracticedev");
+
+    const { _id } = decodedJWT;
+    const userData = await User.findById(_id);
+
+    if(!userData){
+      throw new Error("User Doesn't exist.");
+    }
+
+    res.send(userData);
+  } catch (err) {
+      res.status(400).send("Error: " + err.message);
   }
 });
 
