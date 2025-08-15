@@ -5,14 +5,15 @@ const bcrypt = require("bcrypt");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middleware/auth");
 
 const app = express();
-app.use(cors());
 app.use(express.json());
+app.use(cors());
 app.use(cookieParser());
 
-//user APIs
-app.post("/user", async (req, res) => {
+//sign-up APIs
+app.post("/signup", async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
 
   const hashPassword = await bcrypt.hash(password, 10);
@@ -32,74 +33,6 @@ app.post("/user", async (req, res) => {
   }
 });
 
-app.delete("/user", async (req, res) => {
-  const userMail = req.body.email;
-  try {
-    const userData = await User.find({ email: userMail });
-
-    if (!userData || userData.length === 0) {
-      return res.status(400).send("User not found");
-    }
-
-    const userId = userData[0]._id;
-    await User.findByIdAndDelete(userId);
-
-    res.send("Deleted");
-  } catch (err) {
-    res.status(500).send("Can't Delete");
-  }
-});
-
-app.get("/user/:id", async (req, res) => {
-  const userId = req.params.id;
-  // console.log(userId);
-  try {
-    const userData = await User.findOne({ _id: userId });
-    if (!userData) {
-      res.status(400).send("User not found");
-    } else {
-      res.send(userData);
-    }
-  } catch (err) {
-    res.status(400).send("something went wrong");
-  }
-});
-
-app.patch("/user/:id", async (req, res) => {
-  const userID = req.params.id;
-  const userData = req.body;
-  try {
-    const userCheck = await User.findOne({ _id: userID });
-    if (!userCheck) {
-      res.status(400).send("User not found");
-    }
-    const UPDATE_ALLOWED = [
-      "gender",
-      "age",
-      "photoURL",
-      "about",
-      "skills",
-      "firstName",
-      "lastName",
-    ];
-    const isUpdateAllowed = Object.keys(userData).every((k) =>
-      UPDATE_ALLOWED.includes(k)
-    );
-    if (!isUpdateAllowed) {
-      res.status(400).send("Field not allowed for modification");
-    }
-    const result = await User.findOneAndUpdate(
-      { _id: userID },
-      { $set: userData },
-      { runValidators: true }
-    );
-    // console.log(result);
-    res.send("Updated Successfully.");
-  } catch (err) {
-    res.status(400).send("Error: " + err);
-  }
-});
-
 //sign-in APIs
 app.post("/signin", async (req, res) => {
   const { email, password } = req.body;
@@ -112,10 +45,12 @@ app.post("/signin", async (req, res) => {
     const checkPw = await bcrypt.compare(password, hashPw.password);
     if (checkPw) {
       //Create a JWT Token
-      const token = await jwt.sign({ _id: hashPw._id }, "mypracticedev");
+      const token = await jwt.sign({ _id: hashPw._id }, "mypracticedev", {expiresIn:'7d'});
 
       //Add the token back to cookie and send the response back to the server
-      res.cookie("token", token);
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 24 * 3600000 * 7), // cookie will be removed after 8 hours
+      });
 
       res.send("Login Successful");
     } else {
@@ -126,39 +61,11 @@ app.post("/signin", async (req, res) => {
   }
 });
 
-app.get("/profile", async (req, res) => {
+app.get("/profile", userAuth, async (req, res, next) => {
   try {
-    const cookies = req.cookies;
-    const { token } = cookies;
-    if (!token) {
-      throw new Error("Invalid Token");
-    }
-    const decodedJWT = jwt.verify(token, "mypracticedev");
-
-    const { _id } = decodedJWT;
-    const userData = await User.findById(_id);
-
-    if(!userData){
-      throw new Error("User Doesn't exist.");
-    }
-
-    res.send(userData);
+    res.send(req.userData);
   } catch (err) {
-      res.status(400).send("Error: " + err.message);
-  }
-});
-
-//feed APIs
-app.get("/feed", async (req, res) => {
-  const userData = await User.find({});
-  try {
-    if (userData.length == 0) {
-      res.status(400).send("Data not found");
-    } else {
-      res.send(userData);
-    }
-  } catch (err) {
-    res.status(400).send("something went wrong");
+    res.status(400).send("Error: " + err.message);
   }
 });
 

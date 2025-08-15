@@ -1,18 +1,31 @@
-const adminAuth = (req, res, next) => {
-  const auth = "xyz";
-  const isAdmin = auth === "xyz";
-  if (isAdmin) next();
-  else res.status(401).send("Error");
-};
+const jwt = require("jsonwebtoken")
+const User = require("../models/user")
+const userAuth = async(req, res, next) => {
+  try{
+    //read the token from req cookies
+    const { token } = req.cookies;
+    if(!token){
+      throw new error("Token not Valid");
+    }
 
-const userAuth = (req, res, next) => {
-  const auth = "xyz";
-  const isUser = auth === "xyz";
-  if (isUser) next();
-  else res.status(401).send("Error");
+    //validate the cookies
+    const { _id } = jwt.verify(token, "mypracticedev");
+
+    //find the user
+    const userData = await User.findById(_id);
+    if(!userData){
+      throw new Error("User not found");
+    }
+
+    req.userData = userData;
+
+    next();
+  }
+  catch(err){
+    res.status(400).send("Error: " + err.message);
+  }
 };
 
 module.exports ={
-    adminAuth,
     userAuth
 }
