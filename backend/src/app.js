@@ -37,15 +37,16 @@ app.post("/signup", async (req, res) => {
 app.post("/signin", async (req, res) => {
   const { email, password } = req.body;
   try {
-    const hashPw = await User.findOne({ email: email }, "password");
+    const user = await User.findOne({ email: email });
 
-    if (!hashPw) {
+    if (!user) {
       throw new Error("Invalid Credentials");
     }
-    const checkPw = await bcrypt.compare(password, hashPw.password);
+    const checkPw = await user.validatePassword(password);
+
     if (checkPw) {
       //Create a JWT Token
-      const token = await jwt.sign({ _id: hashPw._id }, "mypracticedev", {expiresIn:'7d'});
+      const token = await user.getJWT();
 
       //Add the token back to cookie and send the response back to the server
       res.cookie("token", token, {
