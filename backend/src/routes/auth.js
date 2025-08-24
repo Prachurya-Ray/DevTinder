@@ -1,8 +1,9 @@
-const express = require('express');
+const express = require("express");
 
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const { userAuth } = require("../middleware/auth");
+const { validPassword } = require("../utils/validation");
 
 const authRouter = express.Router();
 
@@ -10,20 +11,27 @@ const authRouter = express.Router();
 authRouter.post("/signup", async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
 
-  const hashPassword = await bcrypt.hash(password, 10);
-
-  // dynamic signup api to receive data from end user
-  const user = new User({
-    firstName,
-    lastName,
-    email,
-    password: hashPassword,
-  });
   try {
+    if (!validPassword(password)) {
+      throw new Error(
+        "Password not strong - minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 1"
+      );
+    }
+
+    const hashPassword = await bcrypt.hash(password, 10);
+
+    // dynamic signup api to receive data from end user
+    const user = new User({
+      firstName,
+      lastName,
+      email,
+      password: hashPassword,
+    });
+
     await user.save();
     res.send("Saved");
   } catch (err) {
-    res.status(400).send("Can't save. Error: " + err);
+    res.status(400).send("Can't save. Error: " + err.message);
   }
 });
 
@@ -57,7 +65,7 @@ authRouter.post("/login", async (req, res) => {
 });
 
 //log-out APIs
-authRouter.post("/logout", userAuth, async (req, res) => {
+authRouter.post("/logout", async (req, res) => {
   res.clearCookie("token");
   res.send("User Loged Out");
 });
